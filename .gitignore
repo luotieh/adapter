@@ -1,0 +1,38 @@
+# --- C++/Qt ---
+# 编译产物
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dll
+*.exe
+
+# Qt 自动生成的文件
+Makefile
+*.Debug
+*.Release
+/build/
+/debug/
+/release/
+/GeneratedFiles/
+*.user
+*.qbs.user
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.env
+
+# --- IDE/OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# db
+.db
