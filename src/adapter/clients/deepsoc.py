@@ -4,13 +4,17 @@ import httpx
 
 import requests
 from adapter.config import settings
+from adapter.clients.deepsoc_auth import DeepSOCAuth
+
+
 
 def create_event(payload: dict) -> dict:
+    token = DeepSOCAuth.get_token()
     url = f"{settings.deepsoc_base_url}/api/event/create"
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {settings.deepsoc_api_key}",
+        "Authorization": f"Bearer {token}",
     }
 
     resp = requests.post(

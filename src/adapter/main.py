@@ -5,6 +5,7 @@ from .api.routes_health import router as health_router
 from .api.routes_evidence import router as evidence_router
 from .api.routes_sync import router as sync_router
 from .api.routes_event import router as event_router
+from adapter.clients.deepsoc_auth import DeepSOCAuth
 
 def create_app() -> FastAPI:
     app = FastAPI(title="ly-deepsoc-adapter", version="0.1.0")
@@ -21,3 +22,8 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
+
+@app.on_event("startup")
+def startup():
+    # 启动即验证 DeepSOC 登录
+    DeepSOCAuth.get_token()
