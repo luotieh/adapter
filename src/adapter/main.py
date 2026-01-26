@@ -18,15 +18,17 @@ def create_app() -> FastAPI:
         "http://localhost:18080", # 建议也带上本地测试地址
     ]
 
+    # 1. 更加宽松的 CORS 配置，确保错误响应也能正常返回
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,            # 允许的源
-        allow_credentials=True,           # 允许携带 Cookie
-        allow_methods=["*"],              # 允许所有方法 (GET, POST, OPTIONS 等)
-        allow_headers=["*"],              # 允许所有请求头
+        allow_origins=["*"],             # 临时改为 * 确保不是这里的问题
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"]             # 暴露所有头部
     )
     # --- 新增 CORS 配置结束 ---
-    
+
     @app.on_event("startup")
     def _startup():
         init_db()
