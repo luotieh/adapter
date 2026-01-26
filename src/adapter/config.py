@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     deepsoc_base_url: AnyUrl
     deepsoc_api_key: str = Field(min_length=1)
 
+    # DeepSOC Auth
+    deepsoc_username: str = Field(min_length=1)
+    deepsoc_password: str = Field(min_length=1)
+    deepsoc_token_refresh_seconds: int = 3600
+
     # Sync
     sync_enabled: bool = True
     sync_interval_seconds: int = 10
