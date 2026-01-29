@@ -2,56 +2,43 @@ from adapter.services.dedup import fingerprint, reserve, bind
 from adapter.services.mapping import ly_event_to_deepsoc
 from adapter.clients.deepsoc import create_event
 
-def process_event(
-    *,
-    db,
-    ly_event: dict,
-    deepsoc_client,
-):
-    """
-    pipeline 唯一入口
-    ly_event: 来自 API / sync 的原始 dict
-    """
+from ..logger import logger
 
-    # 1. 基础校验（兜底）
-    ly_id = ly_event.get("id")
-    if not ly_id:
-        raise ValueError("ly_event.id is required")
+def process_event(db, ly_event: dict, deepsoc_client):
+    try:
+        logger.info("process_event start", extra={"ly_event": ly_event})
 
-    # 2. 指纹 & 去重
-    fp = fingerprint(ly_event)
+        fp = fingerprint(ly_event)
 
-    if not reserve(db, fp):
+        if not reserve(db, fp):
+            logger.info("duplicate event", extra={"fingerprint": fp})
+            return {
+                "skipped": True,
+                "reason": "duplicate",
+                "ly_event_id": ly_event.get("id"),
+            }
+
+        payload = ly_event_to_deepsoc(ly_event)
+        logger.info("deepsoc payload ready", extra={"payload": payload})
+
+        result = deepsoc_client.create_event(payload)
+        logger.info("deepsoc create success", extra={"result": result})
+
+        bind(
+            db,
+            fp,
+            ly_id=ly_event.get("id"),
+            deepsoc_id=result["data"]["event_id"],
+        )
+
         return {
-            "skipped": True,
-            "reason": "duplicate",
-            "ly_event_id": ly_id,
+            "success": True,
+            "ly_event_id": ly_event.get("id"),
+            "deepsoc_event_id": result["data"]["event_id"],
         }
 
-    # 3. 映射为 DeepSOC payload
-    payload = ly_event_to_deepsoc(ly_event)
-
-    # 4. 调用 DeepSOC
-    result = deepsoc_client.create_event(payload)
-
-    deepsoc_id = (
-        result.get("data", {}) or {}
-    ).get("event_id")
-
-    if not deepsoc_id:
-        raise RuntimeError(f"invalid deepsoc response: {result}")
-
-    # 5. 绑定关系
-    bind(
-        db,
-        fp,
-        ly_id=ly_id,
-        deepsoc_id=deepsoc_id,
-    )
-
-    return {
-        "success": True,
-        "ly_event_id": ly_id,
-        "deepsoc_event_id": deepsoc_id,
-    }
+    except Exception:
+        # ⭐ 关键：完整 traceback
+        logger.exception("process_event failed")
+        raise
 
