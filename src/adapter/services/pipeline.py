@@ -1,6 +1,6 @@
 from adapter.services.dedup import fingerprint, reserve, bind
 from adapter.services.mapping import ly_event_to_deepsoc
-from adapter.clients.deepsoc import create_event
+from adapter.clients.deepsoc import DeepSOCClient
 
 from ..logger import logger
 
@@ -21,7 +21,7 @@ def process_event(db, ly_event: dict, deepsoc_client):
         payload = ly_event_to_deepsoc(ly_event)
         logger.info("deepsoc payload ready")
 
-        result = create_event(
+        result = deepsoc_client.create_event(
             payload=payload,
             idempotency_key=fp,
         )
