@@ -1,56 +1,96 @@
 from __future__ import annotations
-from typing import Any, Dict
+
+from typing import Any, Dict, Optional
+import time
 import httpx
 
-import requests
 from adapter.config import settings
 from adapter.clients.deepsoc_auth import DeepSOCAuth
-from adapter.models import PushedEvent
-
-
-def create_event(payload: dict) -> dict:
-    token = DeepSOCAuth.get_token()
-    url = f"{settings.deepsoc_base_url}/api/event/create"
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    resp = requests.post(
-        url,
-        json=payload,
-        headers=headers,
-        timeout=10
-    )
-
-    if resp.status_code != 200:
-        raise RuntimeError(
-            f"DeepSOC create event failed: {resp.status_code} {resp.text}"
-        )
-
-    return resp.json()
 
 
 class DeepSOCClient:
-    """DeepSOC API client.
+    """
+    DeepSOC API Client（唯一合法入口）
 
-    Default assumes:
-      POST /api/event/create
-    Adjust if your DeepSOC deployment differs.
+    职责：
+    - 管理 JWT（自动获取 / 刷新）
+    - 封装 HTTP 细节
+    - 强制幂等（Idempotency-Key）
     """
 
-    def __init__(self, base_url: str, api_key: str):
-        self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
-        self._client = httpx.Client(timeout=5.0)
+    def __init__(
+        self,
+        base_url: Optional[str] = None,
+        timeout: float = 10.0,
+    ):
+        self.base_url = (base_url or settings.deepsoc_base_url).rstrip("/")
+        self.timeout = timeout
+        self._client = httpx.Client(timeout=timeout)
 
-    def _headers(self) -> Dict[str, str]:
-        return {"Authorization": f"Bearer {self.api_key}", "Accept": "application/json"}
+    # =========================
+    # 内部工具
+    # =========================
 
-    def create_event(self, payload: Dict[str, Any], idempotency_key: str) -> Dict[str, Any]:
-        headers = self._headers()
-        headers["Idempotency-Key"] = idempotency_key
-        r = self._client.post(f"{self.base_url}/api/event/create", json=payload, headers=headers)
-        r.raise_for_status()
-        return r.json()
+    def _auth_header(self) -> Dict[str, str]:
+        """
+        获取 Authorization Header（自动刷新 token）
+        """
+        token = DeepSOCAuth.get_token()
+        return {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+
+    def _post(
+        self,
+        path: str,
+        *,
+        json: Dict[str, Any],
+        idempotency_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        headers = self._auth_header()
+
+        if idempotency_key:
+            headers["Idempotency-Key"] = idempotency_key
+
+        url = f"{self.base_url}{path}"
+
+        resp = self._client.post(
+            url,
+            json=json,
+            headers=headers,
+        )
+
+        # 统一异常语义
+        if resp.status_code >= 400:
+            raise RuntimeError(
+                f"DeepSOC API error {resp.status_code}: {resp.text}"
+            )
+
+        return resp.json()
+
+    # =========================
+    # 对外 API
+    # =========================
+
+    def create_event(
+        self,
+        payload: Dict[str, Any],
+        *,
+        idempotency_key: str,
+    ) -> Dict[str, Any]:
+        """
+        创建 DeepSOC 事件（强制幂等）
+
+        :param payload: DeepSOC 事件 payload
+        :param idempotency_key: 幂等 key（必须，通常用 fingerprint）
+        """
+        if not idempotency_key:
+            raise ValueError("idempotency_key is required")
+
+        return self._post(
+            "/api/event/create",
+            json=payload,
+            idempotency_key=idempotency_key,
+        )
