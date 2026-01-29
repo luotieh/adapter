@@ -8,19 +8,23 @@ class Base(DeclarativeBase):
 
 # ========== 1️⃣ 请求体模型（FastAPI 422 用） ==========
 class LyEvent(Base):
-    id: str
-    rule_desc: str
-    threat_source: str
-    victim_target: str
-    event_type: str
-    detail_type: str
-    method: str
-    event_level: str
-    occurrence_time: str
+    __tablename__ = "ly_event"
 
-    model_config = {
-        "extra": "ignore"
-    }
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+
+    event_type: Mapped[str] = mapped_column(String)
+    detail_type: Mapped[str] = mapped_column(String)
+
+    threat_source: Mapped[str] = mapped_column(String)
+    victim_target: Mapped[str] = mapped_column(String)
+
+    rule_desc: Mapped[str] = mapped_column(String)
+    method: Mapped[str] = mapped_column(String)
+
+    event_level: Mapped[str] = mapped_column(String)
+    is_active: Mapped[str] = mapped_column(String)
+
+    occurrence_time: Mapped[str] = mapped_column(String)
 
 # ========== 2️⃣ 去重映射表 ==========
 class EventMap(Base):
