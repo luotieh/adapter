@@ -2,7 +2,7 @@ from fastapi import APIRouter, Header, HTTPException, Depends
 from sqlalchemy.orm import Session
 from ..config import settings
 from ..deps import get_db, get_deepsoc_client
-from ..services.sync import process_event
+from ..services.pipeline import process_event
 
 router = APIRouter(prefix="/internal", tags=["internal-event"])
 
