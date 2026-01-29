@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Header, HTTPException
 from adapter.config import settings
-from adapter.services.mapping import ly_event_to_deepsoc_payload
+from adapter.models import LyEvent
+from adapter.services.pipeline import process_event
 from adapter.clients.deepsoc import create_event
 
 router = APIRouter(prefix="/internal")

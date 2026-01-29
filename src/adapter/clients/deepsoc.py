@@ -5,7 +5,7 @@ import httpx
 import requests
 from adapter.config import settings
 from adapter.clients.deepsoc_auth import DeepSOCAuth
-
+from adapter.models import PushedEvent
 
 
 def create_event(payload: dict) -> dict:

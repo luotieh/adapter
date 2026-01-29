@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Any, Dict
 import hashlib
 import json
+from adapter.models import LyEvent
+
 
 SEVERITY_MAP = {
     "极高": "high",
@@ -10,7 +12,7 @@ SEVERITY_MAP = {
     "低": "low"
 }
 
-def ly_event_to_deepsoc_payload(ly_event: dict) -> dict:
+def ly_event_to_deepsoc(ly_event: LyEvent) -> dict:
     """
     流影事件 → DeepSOC 事件创建 Payload
     """
@@ -18,37 +20,40 @@ def ly_event_to_deepsoc_payload(ly_event: dict) -> dict:
     observables = [
         {
             "type": "ip",
-            "value": ly_event.get("threat_source"),
+            "value": ly_event.threat_source,
             "role": "source"
         },
         {
             "type": "ip",
-            "value": ly_event.get("victim_target"),
+            "value": ly_event.victim_target,
             "role": "destination"
         }
     ]
 
     context = {
-        "ly_id": ly_event.get("id"),
-        "event_type": ly_event.get("event_type"),
-        "detail_type": ly_event.get("detail_type"),
-        "detection_method": ly_event.get("method"),
-        "occurrence_time": ly_event.get("occurrence_time"),
-        "duration": ly_event.get("duration"),
-        "is_active": ly_event.get("is_active"),
-        "processing_status": ly_event.get("processing_status"),
+        "ly_id": ly_event.id,
+        "event_type": ly_event.event_type,
+        "detail_type": ly_event.detail_type,
+        "detection_method": ly_event.method,
+        "occurrence_time": ly_event.occurrence_time,
+        "duration": ly_event.duration,
+        "is_active": ly_event.is_active,
+        "processing_status": ly_event.processing_status,
         "system_ref": "FlowShadow"
     }
 
     return {
-        "title": f"{ly_event.get('rule_desc')} ({ly_event.get('event_type')})",
+        "title": f"{ly_event.rule_desc} ({ly_event.event_type})",
         "message": (
-            f"SIEM告警：检测到 {ly_event.get('threat_source')} "
-            f"对 {ly_event.get('victim_target')} 发起 "
-            f"{ly_event.get('rule_desc')} 攻击，"
-            f"检测方式：{ly_event.get('method')}"
+            f"SIEM告警：检测到 {ly_event.threat_source} "
+            f"对 {ly_event.victim_target} 发起 "
+            f"{ly_event.rule_desc} 攻击，"
+            f"检测方式：{ly_event.method}"
         ),
-        "severity": SEVERITY_MAP.get(ly_event.get("event_level"), "medium"),
+        "severity": SEVERITY_MAP.get(
+            ly_event.event_level,
+            "medium"
+        ),
         "source": "FlowShadow",
         "category": "Network Threat",
         "context": json.dumps(context, ensure_ascii=False),

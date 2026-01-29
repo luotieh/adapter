@@ -1,10 +1,50 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, Text, UniqueConstraint
+from sqlalchemy import String, Integer, DateTime, Text, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
     pass
+
+# ========== 1️⃣ 请求体模型（FastAPI 422 用） ==========
+class LyEvent(BaseModel):
+    id: str
+    rule_desc: str
+    threat_source: str
+    victim_target: str
+    event_type: str
+    detail_type: str
+    method: str
+    event_level: str
+    occurrence_time: str
+
+    model_config = {
+        "extra": "ignore"
+    }
+
+# ========== 2️⃣ 去重映射表 ==========
+class EventMap(Base):
+    __tablename__ = "event_map"
+
+    fingerprint: Mapped[str] = mapped_column(
+        String(64),
+        primary_key=True
+    )
+
+    ly_event_id: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True
+    )
+
+    deepsoc_event_id: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True
+    )
+
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime,
+        server_default=func.now()
+    )
 
 class SyncCursor(Base):
     __tablename__ = "sync_cursor"
@@ -34,3 +74,4 @@ class AuditLog(Base):
     target: Mapped[str] = mapped_column(String(256))  # flow_id / ip / pcap_id
     meta: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
