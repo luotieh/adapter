@@ -7,7 +7,7 @@ class Base(DeclarativeBase):
     pass
 
 # ========== 1️⃣ 请求体模型（FastAPI 422 用） ==========
-class LyEvent(BaseModel):
+class LyEvent(Base):
     id: str
     rule_desc: str
     threat_source: str
