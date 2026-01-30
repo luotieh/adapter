@@ -20,10 +20,10 @@ class DeepSOCClient:
 
     def __init__(
         self,
-        base_url: Optional[str] = None,
+        base_url: Optional[str] = settings.deepsoc_base_url,
         timeout: float = 10.0,
     ):
-        self.base_url = (base_url or settings.deepsoc_base_url).rstrip("/")
+        self.base_url = (base_url).rstrip("/")
         self.timeout = timeout
         self._client = httpx.Client(timeout=timeout)
 
