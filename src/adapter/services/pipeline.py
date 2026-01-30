@@ -10,12 +10,20 @@ def process_event(db, ly_event: dict, deepsoc_client):
 
         fp = fingerprint(ly_event)
 
+        ly_id=ly_event.get("id")
+
         if not reserve(db, fp):
             logger.info("event skipped (duplicate)")
+
+            # duplicate 场景：允许获取一个“当前 token”
+            token = deepsoc_client.get_token()
+
             return {
                 "skipped": True,
                 "reason": "duplicate",
                 "fingerprint": fp,
+                "ly_id": ly_id,
+                "deepsoc_token": token,
             }
 
         payload = ly_event_to_deepsoc(ly_event)
@@ -31,7 +39,7 @@ def process_event(db, ly_event: dict, deepsoc_client):
         bind(
             db,
             fp,
-            ly_id=ly_event.get("id"),
+            ly_id,
             deepsoc_id=result["data"]["event_id"],
         )
 
