@@ -9,7 +9,6 @@ from .api.routes_event import router as event_router
 from adapter.clients.deepsoc_auth import DeepSOCAuth
 from adapter.api.routes_admin import router as admin_router
 
-app.include_router(admin_router)
 
 def create_app() -> FastAPI:
     app = FastAPI(title="ly-deepsoc-adapter", version="0.1.0")
@@ -41,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(evidence_router)
     app.include_router(event_router)
     app.include_router(sync_router)
+    app.include_router(admin_router)
     app.include_router(admin_router)
     return app
 
