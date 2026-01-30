@@ -94,3 +94,9 @@ class DeepSOCClient:
             json=payload,
             idempotency_key=idempotency_key,
         )
+
+    def get_token(self) -> str:
+        """
+        获取当前使用的 JWT token（只读）
+        """
+        return DeepSOCAuth.get_token()

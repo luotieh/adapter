@@ -21,6 +21,8 @@ def process_event(db, ly_event: dict, deepsoc_client):
         payload = ly_event_to_deepsoc(ly_event)
         logger.info("deepsoc payload ready")
 
+        token = deepsoc_client.get_token()
+        
         result = deepsoc_client.create_event(
             payload=payload,
             idempotency_key=fp,
@@ -40,6 +42,7 @@ def process_event(db, ly_event: dict, deepsoc_client):
             "fingerprint": fp,
             "ly_event_id": ly_event.get("id"),
             "deepsoc_event_id": result["data"]["event_id"],
+            "deepsoc_token": token,
         }
 
     except Exception:
