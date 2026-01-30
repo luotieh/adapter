@@ -6,11 +6,11 @@ class Settings(BaseSettings):
     port: int = 9010
 
     # FlowShadow (ly_server)
-    flowshadow_base_url: AnyUrl
+    flowshadow_base_url: str = "http://10.20.30.23:18080"
     flowshadow_api_key: str = Field(min_length=1)
 
     # DeepSOC
-    deepsoc_base_url: AnyUrl
+    deepsoc_base_url: str = "http://10.20.30.7:5007"
     deepsoc_api_key: str = Field(min_length=1)
 
     # DeepSOC Auth
