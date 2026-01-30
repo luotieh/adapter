@@ -1,4 +1,4 @@
-from adapter.services.dedup import fingerprint, reserve, bind
+from adapter.services.dedup import fingerprint, reserve, bind, get_mapping
 from adapter.services.mapping import ly_event_to_deepsoc
 from adapter.clients.deepsoc import DeepSOCClient
 
@@ -15,6 +15,7 @@ def process_event(db, ly_event: dict, deepsoc_client):
         if not reserve(db, fp):
             logger.info("event skipped (duplicate)")
 
+            row = get_mapping(db, fp)
             # duplicate 场景：允许获取一个“当前 token”
             token = deepsoc_client.get_token()
 
@@ -24,6 +25,7 @@ def process_event(db, ly_event: dict, deepsoc_client):
                 "fingerprint": fp,
                 "ly_id": ly_id,
                 "deepsoc_token": token,
+                "deepsoc_event_id": row.deepsoc_event_id if row else None,
             }
 
         payload = ly_event_to_deepsoc(ly_event)

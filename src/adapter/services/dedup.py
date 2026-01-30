@@ -35,3 +35,6 @@ def bind(db: Session, fp: str, ly_id: str, deepsoc_id: str):
     row.ly_event_id = ly_id
     row.deepsoc_event_id = deepsoc_id
     db.commit()
+
+def get_mapping(db: Session, fp: str) -> EventMap | None:
+    return db.get(EventMap, fp)
