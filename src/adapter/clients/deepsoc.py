@@ -88,7 +88,8 @@ class DeepSOCClient:
         """
         if not idempotency_key:
             raise ValueError("idempotency_key is required")
-
+        print("create_event payload", payload)
+        print("create_event idempotency_key", idempotency_key)
         return self._post(
             "/api/event/create",
             json=payload,
