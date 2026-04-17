@@ -1,5 +1,6 @@
-from pydantic import AnyUrl, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     host: str = "0.0.0.0"
@@ -31,8 +32,15 @@ class Settings(BaseSettings):
     # Internal API auth
     adapter_internal_api_key: str = Field(min_length=1)
 
+    # IAM SSO
+    iam_base_url: str = "http://iam.example.com"
+    iam_client_id: str = ""
+    iam_client_secret: str = ""
+    iam_redirect_uri: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = False
+
 
 settings = Settings()
